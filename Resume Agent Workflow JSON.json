@@ -1,0 +1,200 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Resume Refiner AI Agent",
+        "formDescription": "Please submit your resume, desired job description and email for the AI Agent to provide you with suggestion on how to update your resume for the specific job you are interested in applying for.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Resume",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Job",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c01b0b47-c955-4583-acf8-d5a11c056928",
+      "name": "Resume Form Submission",
+      "webhookId": "4783f452-9f64-4c90-ac73-a00124abc7d6"
+    },
+    {
+      "parameters": {
+        "url": "={{$(\"Resume Form Submission\").item.json[\"Job\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "63319e39-73f1-4937-9ac5-e5a860171672",
+      "name": "Job Description Scraper HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert resume editor. Your task is to analyze the candidate's resume alongside the Grab job posting and deliver **concrete revision suggestions** to tailor the resume for this specific opportunity.\n\nPlease provide:\n\n1. A list of **specific resume bullet point rewrites or additions**, emphasizing quantifiable achievements and using terminology from the job posting.\n2. A **keyword matching summary** showing how key terms from the Grab job description map to revised resume content.\n3. Suggestions to improve tone, format, and structure that reflect Grab’s preferred style (e.g. concise, results-oriented, collaborative language).\n4. Clear instructions for the candidate to implement revisions.\n\nThen, write a short email summarizing your suggestions in a professional but approachable tone.\n\n---Candidate Resume---\n{{ $('Resume Form Submission').item.json.Resume }}\n\n---Grab Job Posting---\n{{ $json.data }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d077711a-d2a2-4137-9924-ec2be712b4ba",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        208
+      ],
+      "id": "0c350e3f-03fa-4404-929f-40a27d4aedf9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "fOC1ECoeibCS0QsV",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"resumeFeedback\": {\n    \"bulletPointEdits\": [\n      {\n        \"type\": \"Reword\",\n        \"content\": \"Maintained the product strategy, roadmap, and product marketing for our internal Survey Platform and external-facing Insights Library.\"\n      },\n      {\n        \"type\": \"Add\",\n        \"content\": \"Collaborated with clients and internal users to gather, synthesize, and prioritize user feedback.\"\n      },\n      {\n        \"type\": \"Add\",\n        \"content\": \"Translated complex user needs and technical capabilities into clear product specifications and actionable development tasks.\"\n      },\n      {\n        \"type\": \"Add\",\n        \"content\": \"Developed a deep understanding of the progressive political ecosystem to ensure product strategy met user needs.\"\n      }\n    ],\n    \"keywordMatching\": [\n      {\n        \"keyword\": \"Manage\",\n        \"summary\": \"Emphasize experience managing product strategy, roadmap, and marketing.\"\n      },\n      {\n        \"keyword\": \"Work with\",\n        \"summary\": \"Highlight collaboration with clients and internal users.\"\n      },\n      {\n        \"keyword\": \"Translate\",\n        \"summary\": \"Showcase ability to translate complex user needs into actionable tasks.\"\n      },\n      {\n        \"keyword\": \"Develop\",\n        \"summary\": \"Highlight understanding of progressive political ecosystem and adaptation of product strategy.\"\n      }\n    ],\n    \"toneAndFormatSuggestions\": [\n      \"Use active voice and focus on measurable impact.\",\n      \"Maintain concise structure with consistent verb tense.\",\n      \"Ensure alignment with collaborative and user-focused culture.\"\n    ]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        208
+      ],
+      "id": "c7ec91e9-c3e1-48fb-a410-626128abb9d6",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "subject": "How to Update your Resume for Your Desired Job",
+        "message": "Resume Improvement Suggestions:",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        768,
+        0
+      ],
+      "id": "81468bf1-de09-4031-b8e1-057e2adc50c4",
+      "name": "Send a message",
+      "webhookId": "a706c065-168a-4218-8aea-d55992c85b29",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jb7856fH3CSpIeix",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Resume Form Submission": {
+      "main": [
+        [
+          {
+            "node": "Job Description Scraper HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Description Scraper HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4cd80230-c544-4963-9272-9b14a36b646f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e16d0e745e7961ccd5c575ae4d530d82e193356dd1f698b89e347e25be56898"
+  },
+  "id": "5eg6fMWl0wQLEvuJ",
+  "tags": []
+}
